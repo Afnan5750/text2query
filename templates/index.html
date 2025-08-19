@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Power Query</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+<nav class="navbar">
+  <div class="navbar-content">
+    <a href="/" class="navbar-brand">
+      <i class="fa-solid fa-database logo"></i>
+      <div class="brand-text">
+        <span class="brand-name">Power Query</span>
+        <span class="tagline">Ask Your Database in Plain English</span>
+      </div>
+    </a>
+  </div>
+
+  <div id="navbar-db">
+    <label for="database" class="db-label">Database</label>
+    <select class="form-select db-select" id="database" name="database" required>
+      {% for db in databases %}
+      <option value="{{ db }}" {% if db == "student" %}selected{% endif %}>{{ db }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</nav>
+
+
+
+  <!-- Sidebar (Always Open) -->
+<div id="sidebar" class="sidebar">
+ <button
+  id="newQueryBtn"
+  type="button"
+  title="Start a New Query"
+>
+  <i class="bi bi-plus-lg"></i> New Query
+</button>
+
+
+  <h5 class="sidebar-title">
+    <i class="bi bi-clock-history"></i> History
+  </h5>
+ <ul class="sidebar-list">
+  {% for item in history_items %}
+    <li 
+      class="sidebar-item" 
+      data-id="{{ item.id }}" 
+      data-db="{{ item.db }}" 
+      title="{{ item.question }}"
+      style="cursor:pointer;"
+    >
+      <span class="history-text">
+        {{ item.question.split()[:4] | join(' ') }}{% if item.question.split()|length > 4 %}...{% endif %}
+      </span>
+      <button class="delete-btn" title="Delete" onclick='deleteHistoryItem("{{ item.db }}", "{{ item.id }}")'>
+        <i class="bi bi-x-circle"></i>
+      </button>
+    </li>
+  {% else %}
+    <li class="sidebar-item no-history">No history available</li>
+  {% endfor %}
+</ul>
+
+</div>
+
+  <!-- Page Content -->
+  <div id="content" class="container mt-5 pt-5">
+      <div class="chat-area">
+        <h2 class="heading">Ask Your Database Questions in Natural Language</h2>
+
+        <form id="chat-form" method="POST" onsubmit="copyDatabaseValue(); showLoader()" class="chat-form">
+          <input type="hidden" id="database-hidden" name="database" />
+          <div class="chat-input-group">
+            <textarea class="chat-textarea" id="question" name="question" rows="1" required placeholder="Type your question...">{{ question }}</textarea>
+
+            <button type="submit" class="send-btn" aria-label="Send">
+              <i class="fas fa-arrow-up" style="font-size: 20px;"></i>
+            </button>
+          </div>
+          <div id="loader" class="loader-text">🔄 Generating SQL & Executing Query...</div>
+        </form>
+      </div>
+
+      <div id="generated-sql-container" class="chat-container" style="display:none;">
+        <div class="chat-header">
+          <span class="left-label">SQL</span>
+          <button type="button" class="copy-btn" title="Copy to clipboard" id="copyBtn">
+            <i class="fa-solid fa-copy"></i> <span class="copy-text">Copy</span>
+          </button>
+        </div>
+      <form id="confirmForm">
+        <div class="form-group">
+          <textarea
+            class="custom-textarea"
+            name="confirmed_sql"
+            id="sqlTextarea"
+            rows="5"
+            required
+          >{% if sql %}{{ sql }}{% endif %}</textarea>
+          <input
+            type="hidden"
+            name="database"
+            value="{% if selected_db %}{{ selected_db }}{% endif %}"
+          />
+          <input
+            type="hidden"
+            name="question"
+            value="{% if question %}{{ question }}{% endif %}"
+          />
+          <!-- Hidden input for yes/no value -->
+          <input type="hidden" name="is_correct" id="is_correct" required />
+        </div>
+        <div class="form-group">
+          <label class="custom-label">Is the query correct?</label>
+          <div class="thumbs-container" style="font-size: 2rem; cursor: pointer; display: flex; gap: 1rem;">
+            <span id="thumbUp" class="thumb-btn" title="Yes" aria-label="Yes" role="button">
+              <i class="bi bi-hand-thumbs-up"></i>
+            </span>
+            <span id="thumbDown" class="thumb-btn" title="No" aria-label="No" role="button">
+            <i class="bi bi-hand-thumbs-down"></i>
+            </span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+
+
+{% if result %}
+  <hr />
+  <h4>Result</h4>
+  {% if result is string %}
+    <p class="error-text">{{ result }}</p>
+  {% elif result.rows|length == 0 %}
+    <p>No data returned.</p>
+  {% else %}
+    <div class="table-container">
+      <table class="custom-data-table">
+        <thead>
+          <tr>
+            {% for col_name in result.columns %}
+              <th>{{ col_name }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in result.rows %}
+            <tr>
+              {% for col in row %}
+                <td>{{ col }}</td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+{% endif %}
+
+
+
+<!-- Toast container -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+  <div id="feedbackToast" class="toast align-items-center text-white bg-success border-0" role="alert" data-bs-delay="3000" data-bs-autohide="true">
+    <div class="d-flex">
+      <div class="toast-body" id="toastMessage">Query saved successfully.</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+
+  <div id="feedbackErrorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" data-bs-delay="3000" data-bs-autohide="true">
+    <div class="d-flex">
+      <div class="toast-body" id="toastErrorMessage">Query not saved. Please revise it.</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+</body>
+</html>

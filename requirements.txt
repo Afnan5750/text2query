@@ -1,0 +1,13 @@
+# This is for PostgreSQL Database
+
+# flask
+# llama-cpp-python
+# psycopg2-binary
+# sqlparse
+
+# This is for Oracle Database
+
+flask
+llama-cpp-python
+oracledb
+sqlparse

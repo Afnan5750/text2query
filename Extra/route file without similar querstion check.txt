@@ -1,0 +1,59 @@
+# --- Flask Routes ---
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    result = ''
+    sql = ''
+    question = ''
+    selected_db = ''
+    history_items = []
+    databases = get_all_databases()
+
+    if request.method == 'POST':
+        question = request.form['question']
+        selected_db = request.form['database']
+        conn = connect_oracle()
+
+        ensure_tables_exist(conn)
+
+        # 🔹 Check for a similar question in history
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT generated_sql
+            FROM history
+            WHERE LOWER(question) LIKE LOWER(:q)
+            ORDER BY created_at DESC
+        """, {"q": f"%{question}%"})
+        row = cursor.fetchone()
+        cursor.close()
+
+        if row:
+            # Use the stored SQL if similar question found
+            prev_sql = row[0]
+            sql = prev_sql.read() if hasattr(prev_sql, 'read') else prev_sql
+            # ✅ Save this run into history too
+            save_combine_query(conn, selected_db, question, sql)
+        else:
+            # No similar question → generate a new one
+            schema, _ = get_schema(conn)
+            prompt = PROMPT_TEMPLATE.format(question=question, schema_ddl=schema)
+            sql = generate_sql(prompt)
+            save_combine_query(conn, selected_db, question, sql)
+
+        result = execute_query(conn, sql)
+        history_items = get_all_history()
+        conn.close()
+
+    else:
+        history_items = get_all_history()
+        if databases:
+            selected_db = databases[0]
+
+    return render_template(
+        'index.html',
+        question=question,
+        sql=sql,
+        result=result,
+        databases=databases,
+        selected_db=selected_db,
+        history_items=history_items
+    )
