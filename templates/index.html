@@ -15,24 +15,22 @@
 
   <!-- Navbar -->
 <nav class="navbar">
-  <div class="navbar-content">
-    <a href="/" class="navbar-brand">
-      <i class="fa-solid fa-database logo"></i>
-      <div class="brand-text">
-        <span class="brand-name">Power Query</span>
-        <span class="tagline">Ask Your Database in Plain English</span>
-      </div>
-    </a>
-  </div>
+<div class="navbar-content">
+  <a href="/" class="navbar-brand">
+    <!-- Only Logo -->
+    <img src="{{ url_for('static', filename='Logo/logo.png') }}" alt="Logo" class="logo" style="height:40px; width:auto;" />
+  </a>
+</div>
+
 
   <div id="navbar-db">
-    <label for="database" class="db-label">Database</label>
-    <select class="form-select db-select" id="database" name="database" required>
-      {% for db in databases %}
-      <option value="{{ db }}" {% if db == "student" %}selected{% endif %}>{{ db }}</option>
-      {% endfor %}
-    </select>
-  </div>
+  <label for="database" class="db-label">Database</label>
+  <select class="form-select db-select" id="database" name="database" required>
+    {% for db in databases %}
+      <option value="{{ db }}">{{ db }}</option>
+    {% endfor %}
+  </select>
+</div>
 </nav>
 
 

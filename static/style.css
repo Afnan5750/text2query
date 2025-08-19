@@ -32,10 +32,10 @@ pre {
 
 /* Center the brand horizontally */
 .navbar-content {
-  max-width: calc(1000px + 260px); /* keep max-width consistent */
+  max-width: calc(1000px + 260px);
   margin: 0 auto;
   display: flex;
-  justify-content: flex-start; /* left align inside navbar-content */
+  justify-content: flex-start; /* keep logo left aligned */
   align-items: center;
   height: 3rem;
   flex: 1;
@@ -58,27 +58,11 @@ pre {
   outline: none;
 }
 
+/* Logo only */
 .logo {
-  font-size: 1.4rem;
+  height: 40px;
+  width: auto;
   flex-shrink: 0;
-}
-
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-.brand-name {
-  font-size: 1.1rem;
-}
-
-.tagline {
-  font-size: 0.7rem;
-  color: #94a3b8;
-  font-weight: 400;
-  margin-top: 1px;
-  font-style: italic;
 }
 
 /* Database dropdown section on far right */
@@ -103,6 +87,7 @@ pre {
   border-radius: 4px;
 }
 
+/* Custom select style */
 .form-select {
   background-color: #40414f;
   border: none;
@@ -111,15 +96,10 @@ pre {
   text-align: center;
 }
 
+/* Mobile responsive */
 @media (max-width: 600px) {
   .navbar-content {
     padding: 0 0.8rem;
-  }
-  .brand-name {
-    font-size: 0.95rem;
-  }
-  .tagline {
-    font-size: 0.6rem;
   }
   #navbar-db {
     gap: 0.2rem;
@@ -268,6 +248,37 @@ pre {
 
 .sidebar::-webkit-scrollbar-track {
   background-color: #202123;
+}
+
+/* Target the dropdown select */
+.db-select {
+  max-height: 150px; /* control dropdown height */
+  overflow-y: auto; /* enable vertical scroll */
+}
+
+/* Style the scrollbar (works in Chrome, Edge, Safari) */
+.db-select::-webkit-scrollbar {
+  width: 8px; /* scrollbar width */
+}
+
+.db-select::-webkit-scrollbar-track {
+  background: #f1f1f1; /* track color */
+  border-radius: 10px;
+}
+
+.db-select::-webkit-scrollbar-thumb {
+  background: #888; /* scrollbar color */
+  border-radius: 10px;
+}
+
+.db-select::-webkit-scrollbar-thumb:hover {
+  background: #555; /* darker on hover */
+}
+
+/* Firefox scrollbar */
+.db-select {
+  scrollbar-width: thin; /* "auto" or "thin" */
+  scrollbar-color: #888 #f1f1f1; /* thumb color + track color */
 }
 
 /* Hide sidebar on smaller screens */
